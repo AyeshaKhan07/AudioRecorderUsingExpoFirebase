@@ -6,7 +6,7 @@
  * @flow strict-local
  */
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Audio } from "expo-av";
 import {
   Dimensions,
@@ -19,9 +19,9 @@ import {
 import * as firebase from "firebase";
 import { firebaseConfig } from "../firebaseConfig";
 import Button from "../components/Button";
+
 // import * as FileSystem from "expo-file-system";
 const App = () => {
-  const [uri, setUri] = useState("");
   const [state, setState] = useState({
     isLoggingIn: false,
     recordSecs: 0,
@@ -34,10 +34,15 @@ const App = () => {
 
   if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
+  const storage = firebase.storage();
+  const storageRef = storage.ref();
+  const audioRef = storageRef.child("audio");
   const [description, setDescription] = useState("");
   const screenWidth = Dimensions.get("screen").width;
   const [recording, setRecording] = React.useState();
+  const [audioList, setAudioList] = useState(0);
   const [sound, setSound] = React.useState();
+  const [uri, setUri] = useState("");
   // const path = Platform.select({
   //   ios: "hello.m4a",
   //   android: `${FileSystem.cacheDirectory}/hello.mp3`,
@@ -49,9 +54,14 @@ const App = () => {
   if (!playWidth) {
     playWidth = 0;
   }
-
   async function playSound() {
     console.log("Loading Sound");
+    // const playUri = await firebase
+    //   .storage()
+    //   .ref("audio/nameOfTheFile.m4a")
+    //   .getDownloadURL();
+
+    // console.log("uri:", playUri);
     const { sound } = await Audio.Sound.createAsync(
       { uri: uri },
       { shouldPlay: false }.uri
@@ -82,13 +92,79 @@ const App = () => {
 
   const onStopRecord = async () => {
     console.log("Stopping recording..");
-    setRecording(undefined);
     await recording.stopAndUnloadAsync();
-    const uri = recording.getURI();
+    const uri = await recording.getURI();
     setUri(uri);
     console.log("Recording stopped and stored at", uri);
+    setRecording(undefined);
   };
 
+  const uploadAudioAndDescription = async () => {
+    try {
+      const blob = await new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.onload = () => {
+          try {
+            resolve(xhr.response);
+          } catch (error) {
+            console.log("error:", error);
+          }
+        };
+        xhr.onerror = (e) => {
+          console.log(e);
+          reject(new TypeError("Network request failed"));
+        };
+        xhr.responseType = "blob";
+        xhr.open("GET", uri, true);
+        xhr.send(null);
+      });
+      if (blob != null) {
+        const uriParts = uri.split(".");
+        const fileType = uriParts[uriParts.length - 1];
+        firebase
+          .storage()
+          .ref()
+          .child(`audio/Recording${audioList}.${fileType}`)
+          .put(blob, {
+            contentType: `audio/${fileType}`,
+          })
+          .then(async () => {
+            {
+              console.log("Sent!");
+              const playUri = await firebase
+                .storage()
+                .ref(`audio/Recording${audioList}.m4a`)
+                .getDownloadURL();
+              console.log(playUri);
+              console.log("writting");
+              db.collection("Ayesha")
+                .doc()
+                .set({
+                  Description: description,
+                  AudioUrl: playUri,
+                })
+                .then((res) => console.log("document written successfully"))
+                .catch((error) => console.log(error));
+            }
+          })
+          .catch((e) => console.log("error:", e));
+      } else {
+        console.log("erroor with blob");
+      }
+    } catch (error) {
+      console.log("error:", error);
+    }
+  };
+  useEffect(() => {
+    audioRef
+      .listAll()
+      .then((res) => {
+        setAudioList(res.items.length);
+      })
+      .catch((error) => {
+        console.log("error:", error);
+      });
+  }, []);
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.titleTxt}>Audio Recorder Player</Text>
@@ -131,15 +207,11 @@ const App = () => {
             value={description}
           />
           <Button
-            onPress={() => {
-              console.log("writting");
-              db.collection("Data")
-                .doc()
-                .set({
-                  Description: description,
-                })
-                .then((res) => console.log("document written successfully"))
-                .catch((error) => console.log(error));
+            onPress={async () => {
+              if (description !== "" && uri !== "") {
+                await uploadAudioAndDescription();
+              } else
+                console.log("either description is empty or audio not present");
             }}
           >
             UPLOAD
