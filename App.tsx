@@ -1,5 +1,6 @@
 import 'react-native-gesture-handler';
 import { StatusBar } from 'expo-status-bar';
+import { FirebaseProvider } from './firebaseProvider';
 import React from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
@@ -16,8 +17,10 @@ export default function App() {
   } else {
     return (
       <SafeAreaProvider>
-        <Navigation colorScheme={colorScheme} />
-        <StatusBar />
+        <FirebaseProvider>
+          <Navigation colorScheme={colorScheme} />
+          <StatusBar />
+        </FirebaseProvider>
       </SafeAreaProvider>
     );
   }
