@@ -211,38 +211,40 @@ const App = () => {
             }}
             value={description}
           />
-          <View style={styles.recordBtnWrapper}>
-            <Button
-              style={styles.btn}
-              onPress={() => onStartRecord()}
-              textStyle={styles.txt}
-              onPress={async () => {
-                if (description !== "" && uri !== "") {
-                  await uploadAudioAndDescription();
-                } else
-                  alert("either description is empty or audio not present");
-              }}
-            >
-              UPLOAD
-            </Button>
-            <Button
-              style={[styles.btn, { marginLeft: 12 }]}
-              onPress={() => {
-                firebase
-                  .auth()
-                  .signOut()
-                  .then(() => {
-                    console.log("Signout successfully");
-                    // Sign-out successful.
-                  })
-                  .catch((error) => {
-                    console.error();
-                  });
-              }}
-              textStyle={styles.txt}
-            >
-              SIGNOUT
-            </Button>
+          <View style={styles.viewRecorder}>
+            <View style={styles.recordBtnWrapper}>
+              <Button
+                style={styles.btn}
+                onPress={() => onStartRecord()}
+                textStyle={styles.txt}
+                onPress={async () => {
+                  if (description !== "" && uri !== "") {
+                    await uploadAudioAndDescription();
+                  } else
+                    alert("either description is empty or audio not present");
+                }}
+              >
+                UPLOAD
+              </Button>
+              <Button
+                style={[styles.btn, { marginLeft: 12 }]}
+                onPress={() => {
+                  firebase
+                    .auth()
+                    .signOut()
+                    .then(() => {
+                      console.log("Signout successfully");
+                      // Sign-out successful.
+                    })
+                    .catch((error) => {
+                      console.error();
+                    });
+                }}
+                textStyle={styles.txt}
+              >
+                SIGNOUT
+              </Button>
+            </View>
           </View>
         </View>
       </View>
@@ -252,13 +254,12 @@ const App = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#455A64",
     flexDirection: "column",
     alignItems: "center",
   },
   titleTxt: {
     marginTop: 100,
-    color: "white",
+    color: "black",
     fontSize: 28,
   },
   viewRecorder: {
@@ -285,7 +286,7 @@ const styles = StyleSheet.create({
     alignSelf: "stretch",
   },
   viewBarPlay: {
-    backgroundColor: "white",
+    backgroundColor: "black",
     height: 4,
     width: 0,
   },
@@ -298,18 +299,18 @@ const styles = StyleSheet.create({
     marginTop: 40,
   },
   btn: {
-    borderColor: "white",
+    borderColor: "black",
     borderWidth: 1,
   },
   txt: {
-    color: "white",
+    color: "black",
     fontSize: 14,
     marginHorizontal: 8,
     marginVertical: 4,
   },
   txtRecordCounter: {
     marginTop: 32,
-    color: "white",
+    color: "black",
     fontSize: 20,
     textAlignVertical: "center",
     fontWeight: "200",
@@ -317,7 +318,7 @@ const styles = StyleSheet.create({
   },
   txtCounter: {
     marginTop: 12,
-    color: "white",
+    color: "black",
     fontSize: 20,
     textAlignVertical: "center",
     fontWeight: "200",
@@ -328,8 +329,8 @@ const styles = StyleSheet.create({
     margin: 12,
     borderWidth: 1,
     padding: 10,
-    color: "white",
-    borderColor: "white",
+    color: "black",
+    borderColor: "black",
   },
 });
 export default App;
